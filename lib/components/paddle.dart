@@ -1,10 +1,11 @@
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants.dart';
 import '../breakout_game.dart';
 
-class Paddle extends RectangleComponent with HasGameRef<BreakoutGame>, KeyboardHandler {
+class Paddle extends RectangleComponent with HasGameRef<BreakoutGame>, KeyboardHandler, CollisionCallbacks {
   Paddle()
       : super(
           size: Vector2(GameConstants.paddleWidth, GameConstants.paddleHeight),
@@ -14,10 +15,15 @@ class Paddle extends RectangleComponent with HasGameRef<BreakoutGame>, KeyboardH
   int _direction = 0;
 
   @override
+  Future<void> onLoad() async {
+    add(RectangleHitbox());
+  }
+
+  @override
   void update(double dt) {
     super.update(dt);
     position.x += _direction * GameConstants.paddleSpeed * dt;
-    position.x = position.x.clamp(0, gameRef.size.x - size.x);
+    position.x = position.x.clamp(0, GameConstants.gameWidth - size.x);
   }
 
   @override

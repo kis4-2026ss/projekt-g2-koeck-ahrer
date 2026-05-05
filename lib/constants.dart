@@ -17,5 +17,8 @@ class GameConstants {
   static const Color ballColor = Colors.white;
   static const Color brickColor = Colors.red;
 
+  static const double brickWidth = 50.0;
+  static const double brickHeight = 20.0;
+
   static const int maxLives = 5;
 }

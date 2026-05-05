@@ -5,22 +5,23 @@ import 'package:flutter/material.dart';
 import 'constants.dart';
 import 'components/paddle.dart';
 import 'components/ball.dart';
+import 'components/brick.dart';
 
 class BreakoutGame extends FlameGame with HasCollisionDetection, HasKeyboardHandlerComponents {
   late Paddle paddle;
   late Ball ball;
+  late World world;
   
   int score = 0;
   int lives = GameConstants.maxLives;
 
   @override
-  Color backgroundColor() => GameConstants.bgColor;
+  Color backgroundColor() => Colors.black;
 
   @override
   Future<void> onLoad() async {
     // The new Flame Camera system (v1.8.0+) uses a World component
-    // We add our components to the world, and the camera looks at the world.
-    final world = World();
+    world = World();
     
     // Set up the camera with a fixed resolution
     camera = CameraComponent.withFixedResolution(
@@ -29,9 +30,12 @@ class BreakoutGame extends FlameGame with HasCollisionDetection, HasKeyboardHand
       world: world,
     );
     
-    // Viewport usually centers the world, so we move the camera's view 
-    // to match our 0,0 to width,height coordinate system.
     camera.viewfinder.anchor = Anchor.topLeft;
+
+    world.add(RectangleComponent(
+      size: Vector2(GameConstants.gameWidth, GameConstants.gameHeight),
+      paint: Paint()..color = GameConstants.bgColor,
+    ));
 
     paddle = Paddle()
       ..position = Vector2(
@@ -45,11 +49,40 @@ class BreakoutGame extends FlameGame with HasCollisionDetection, HasKeyboardHand
     world.add(paddle);
     world.add(ball);
     
-    // Add world and camera to the game
+    buildWall();
+
     addAll([world, camera]);
     
-    // FPS counter (added directly to the game, not the world, so it stays fixed on screen)
     add(FpsTextComponent(position: Vector2(10, 10)));
+  }
+
+  void buildWall() {
+    double xpos = 0;
+    double ypos = 60;
+    double adj = 0;
+
+    for (int i = 0; i < 52; i++) {
+      if (xpos + GameConstants.brickWidth > GameConstants.gameWidth) {
+        if (adj == 0) {
+          adj = GameConstants.brickWidth / 2;
+        } else {
+          adj = 0;
+        }
+        xpos = -adj;
+        ypos += GameConstants.brickHeight + 2; // Small gap
+      }
+
+      final brick = Brick(position: Vector2(xpos, ypos));
+      world.add(brick);
+      xpos += GameConstants.brickWidth + 2; // Small gap
+    }
+  }
+
+  void checkWinCondition() {
+    if (world.children.whereType<Brick>().isEmpty) {
+      buildWall();
+      ball.reset();
+    }
   }
 
   void loseLife() {
